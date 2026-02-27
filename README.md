@@ -12,27 +12,27 @@
 
 
 ##  Архитектура системы
-                ┌─────────────────────────────────────┐
-                │         LangGraph Orchestrator      │
-                │  (Управляет потоком между агентами) │
-                └───────────────┬─────────────────────┘
-                                │
-    ┌───────────────────────────┼───────────────────────────┐
-    ▼                           ▼                           ▼
-┌───────────────┐ ┌───────────────┐ ┌───────────────┐
-│ Research Agent│◄────────►│ Analysis Agent│◄────────►│ Report Gen │
-│ (Поиск инфо) │ │ (Оценка рисков│ │ (Формирование │
-└───────┬───────┘ └───────┬───────┘ │ отчета) │
-│ │ └───────────────┘
-▼ ▼ ▲
-┌───────────────┐ ┌───────────────┐ │
-│ RAG System │ │ LoRA-tuned │───────────────────┘
-│(Поиск по базе │ │ LLM │
-│ документов) │ │(Финансовый │
-└───────────────┘ │ экспертный │
-│ домен) │
-└───────────────┘
+                Архитектура системы
 
+```mermaid
+graph TD
+    A[LangGraph Orchestrator] --> B[Research Agent]
+    A --> C[Analysis Agent]
+    A --> D[Report Generator]
+    
+    B <--> C
+    C <--> D
+    
+    B --> E[RAG System<br/>Document Search]
+    C --> F[LoRA-tuned LLM<br/>Financial Expert]
+    F --> D
+    
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:1px
+    style C fill:#bbf,stroke:#333,stroke-width:1px
+    style D fill:#bbf,stroke:#333,stroke-width:1px
+    style E fill:#bfb,stroke:#333,stroke-width:1px
+    style F fill:#bfb,stroke:#333,stroke-width:1px
 ---
 
 ##  Ключевые компоненты
