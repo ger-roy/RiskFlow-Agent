@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pkl
+*.ipynb_checkpoints/
+
+# Virtual Environment
+venv/
+env/
+.env
+
+# Model files (если большие)
+models/*.pkl
+models/*.bin
+models/*.safetensors
+
+# IDE
+.vscode/
+.idea/
+
+# Jupyter Notebooks (но мы их сохраним в notebooks/)
+notebooks/.ipynb_checkpoints/
+
+# Data
+data/*.csv
+!data/sample.csv 
