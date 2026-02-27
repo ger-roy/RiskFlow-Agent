@@ -12,37 +12,70 @@
 
 
 ##  Архитектура системы
-                Архитектура системы
+               ┌─────────────────────────────────────────────────────────────┐
+│                     LangGraph Orchestrator                   │
+│                      (main.py)                               │
+│  Управляет потоком данных между агентами                     │
+└───────────┬───────────────────────────────┬─────────────────┘
+            │                               │
+            ▼                               ▼
+┌───────────────────────┐      ┌───────────────────────┐
+│   Research Pipeline   │      │   Analysis Pipeline    │
+├───────────────────────┤      ├───────────────────────┤
+│ 1. Analyst Agent      │      │ 1. Risk Agent         │
+│    (analyst_agent.py) │      │    (risk_agent.py)    │
+│    • Поиск данных     │      │    • Генерация отчёта │
+│    • Сбор информации  │      │    • Вызов LLM        │
+│                       │      │                       │
+│ 2. RAG System         │      │ 2. Critic Agent       │
+│    (через data_loader)│      │    (critic_agent.py)  │
+│    • Загрузка данных  │      │    • Проверка отчёта  │
+│    • Поиск контекста  │      │    • Валидация        │
+└───────────┬───────────┘      └───────────┬───────────┘
+            │                               │
+            └───────────────┬───────────────┘
+                            ▼
+            ┌─────────────────────────────┐
+            │      ML & LLM Models         │
+            │      (models/)               │
+            ├─────────────────────────────┤
+            │ • LoRA fine-tuning           │
+            │   (lora_adapter.py)          │
+            │ • Credit Scoring Model       │
+            │   (scoring_model.pkl)        │
+            └─────────────────────────────┘
+                            │
+                            ▼
+            ┌─────────────────────────────┐
+            │      Parallel Processing     │
+            │      (utils/)                │
+            ├─────────────────────────────┤
+            │ • Async data loading         │
+            │ • Threading for I/O          │
+            │   (parallel_runner.py)       │
+            └─────────────────────────────┘
+```
 
-```mermaid
-graph TD
-    A[LangGraph Orchestrator] --> B[Research Agent]
-    A --> C[Analysis Agent]
-    A --> D[Report Generator]
-    
-    B <--> C
-    C <--> D
-    
-    B --> E[RAG System<br/>Document Search]
-    C --> F[LoRA-tuned LLM<br/>Financial Expert]
-    F --> D
-    
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:1px
-    style C fill:#bbf,stroke:#333,stroke-width:1px
-    style D fill:#bbf,stroke:#333,stroke-width:1px
-    style E fill:#bfb,stroke:#333,stroke-width:1px
-    style F fill:#bfb,stroke:#333,stroke-width:1px
+### Компоненты архитектуры:
+
+| Компонент | Файл | Назначение |
+|-----------|------|------------|
+| **Orchestrator** | `main.py` | Координирует работу агентов через LangGraph |
+| **Analyst Agent** | `agents/analyst_agent.py` | Собирает и структурирует данные о компании |
+| **Risk Agent** | `agents/risk_agent.py` | Генерирует отчет с использованием LLM |
+| **Critic Agent** | `agents/critic_agent.py` | Проверяет отчет на корректность |
+| **RAG System** | `utils/data_loader.py` | Загружает и индексирует документы |
+| **LoRA Adapter** | `models/lora_adapter.py` | Адаптация LLM под финансовый домен |
+| **Scoring Model** | `models/scoring_model.pkl` | Классическая ML модель для скоринга |
+| **Parallel Runner** | `utils/parallel_runner.py` | Asyncio + threading оптимизация |
+
+### Поток данных:
+
+1. **Analyst Agent** получает запрос и собирает данные о компании
+2. **RAG System** загружает релевантные документы через `data_loader`
+3. **Risk Agent** вызывает **LoRA-tuned LLM** для генерации отчета
+4. **Scoring Model** вычисляет кредитный скоринг
+5. **Critic Agent** проверяет отчет и отправляет на доработку или финал
+6. **Parallel Runner** оптимизирует все I/O операции через asyncio
 ---
 
-##  Ключевые компоненты
-
-### 1. Мультиагентная система на LangGraph
-Реализована оркестрация трех специализированных агентов с состоянием и условными переходами.
-
-```python
-# Пример из кода
-workflow.add_node("retrieve_docs", self._retrieve_documents)
-workflow.add_node("research", self.research_agent.run)
-workflow.add_node("analyze", self.analysis_agent.run)
-workflow.add_conditional_edges("analyze", self._should_continue, {...})
